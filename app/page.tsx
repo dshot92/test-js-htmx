@@ -16,6 +16,14 @@ export default function Home() {
   const [selectedModel, setSelectedModel] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [columnCount, setColumnCount] = useState(() => {
+    // Initialize from localStorage or default to 4
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("columnCount");
+      return saved ? parseInt(saved) : 4;
+    }
+    return 4;
+  });
   const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
@@ -25,6 +33,11 @@ export default function Home() {
   useEffect(() => {
     fetchModels();
   }, [selectedCategory]);
+
+  // Save column count to localStorage when it changes
+  useEffect(() => {
+    localStorage.setItem("columnCount", columnCount.toString());
+  }, [columnCount]);
 
   // Handle browser back button
   useEffect(() => {
@@ -166,12 +179,28 @@ export default function Home() {
             </option>
           ))}
         </select>
+        <div className="column-control">
+          <select
+            value={columnCount}
+            onChange={(e) => setColumnCount(parseInt(e.target.value))}
+            className="select"
+          >
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((count) => (
+              <option key={count} value={count}>
+                {count} {count === 1 ? "Column" : "Columns"}
+              </option>
+            ))}
+          </select>
+        </div>
         <button className="theme-toggle" onClick={toggleTheme}>
           {theme === "light" ? "🌙" : "☀️"}
         </button>
       </div>
 
-      <div className="grid">
+      <div
+        className="grid"
+        style={{ gridTemplateColumns: `repeat(${columnCount}, 1fr)` }}
+      >
         {filteredModels.map((model) => (
           <div
             key={model.name}

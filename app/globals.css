@@ -73,12 +73,40 @@ body {
   color: var(--text);
 }
 
+.clear-button {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 18px;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.clear-button:hover {
+  opacity: 1;
+}
+
 .select {
   padding: 0.5rem;
   border: 1px solid var(--border);
   border-radius: 4px;
   background-color: var(--card-bg);
   color: var(--text);
+  min-width: 120px;
+}
+
+.column-control {
+  display: flex;
+  align-items: center;
 }
 
 .grid {
