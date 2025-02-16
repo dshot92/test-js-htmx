@@ -15,7 +15,7 @@
                 <h2>Model Viewer</h2>
                 <div class="dropdown">
                     <button class="categories-btn" onclick="toggleDropdown()">
-                        Categories ▼
+                        Categories
                     </button>
                     <div id="categories-list" class="dropdown-content"
                          hx-get="/api/categories"
@@ -36,6 +36,9 @@
 
         <div id="viewer-view" class="view viewer-view hidden">
             <button class="back-btn" onclick="closeViewer()">←</button>
+            <div class="loading-overlay">
+                <div class="loading-spinner"></div>
+            </div>
             <model-viewer id="model-viewer"
                          camera-controls
                          auto-rotate
@@ -65,6 +68,7 @@
         const galleryView = document.querySelector('#gallery-view');
         const viewerView = document.querySelector('#viewer-view');
         const dropdown = document.querySelector('.dropdown');
+        const loadingOverlay = document.querySelector('.loading-overlay');
 
         function toggleDropdown() {
             dropdown.classList.toggle('active');
@@ -85,18 +89,46 @@
         function closeViewer() {
             viewerView.classList.add('hidden');
             galleryView.classList.remove('hidden');
+            modelViewer.removeAttribute('loaded');
             modelViewer.src = '';
+            history.pushState({ view: 'gallery' }, '', '/');
         }
 
         function showModel(modelPath) {
+            // Reset states
+            modelViewer.removeAttribute('loaded');
+            modelViewer.src = '';
+            loadingOverlay.classList.add('active');
+            
+            // Show viewer
             galleryView.classList.add('hidden');
             viewerView.classList.remove('hidden');
-            modelViewer.src = modelPath;
 
-            // Reset camera position
-            modelViewer.cameraOrbit = '0deg 75deg 105%';
-            modelViewer.resetTurntableRotation();
+            // Update browser history
+            history.pushState({ view: 'viewer', modelPath }, '', `?model=${encodeURIComponent(modelPath)}`);
+
+            // Load new model
+            requestAnimationFrame(() => {
+                modelViewer.src = modelPath;
+                modelViewer.cameraOrbit = '0deg 75deg 105%';
+                modelViewer.resetTurntableRotation();
+            });
         }
+
+        // Handle browser back/forward
+        window.addEventListener('popstate', (event) => {
+            if (event.state?.view === 'gallery' || !event.state) {
+                viewerView.classList.add('hidden');
+                galleryView.classList.remove('hidden');
+                modelViewer.removeAttribute('loaded');
+                modelViewer.src = '';
+            } else if (event.state?.view === 'viewer' && event.state?.modelPath) {
+                showModel(event.state.modelPath);
+            }
+        });
+
+        // Set initial history state
+        history.replaceState({ view: 'gallery' }, '', window.location.pathname);
 
         // Handle loading progress
         modelViewer.addEventListener('progress', (e) => {
@@ -105,10 +137,20 @@
             
             progressBar.classList.remove('hide');
             updatingBar.style.width = `${e.detail.totalProgress * 100}%`;
-            
-            if (e.detail.totalProgress === 1) {
-                progressBar.classList.add('hide');
-            }
+        });
+
+        // Handle model loading completion
+        modelViewer.addEventListener('load', () => {
+            const progressBar = document.querySelector('.progress-bar');
+            progressBar.classList.add('hide');
+            loadingOverlay.classList.remove('active');
+            modelViewer.setAttribute('loaded', '');
+        });
+
+        // Handle model loading errors
+        modelViewer.addEventListener('error', () => {
+            loadingOverlay.classList.remove('active');
+            alert('Error loading model');
         });
     </script>
 </body>
