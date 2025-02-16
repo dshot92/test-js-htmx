@@ -1,8 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Model Viewer</title>
     <link rel="stylesheet" href="/styles/global.css">
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
@@ -13,14 +16,19 @@
         <div id="gallery-view" class="view">
             <header>
                 <h2>Model Viewer</h2>
-                <div class="dropdown">
-                    <button class="categories-btn" onclick="toggleDropdown()">
-                        Categories
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">
+                        <span id="theme-icon">☀️</span>
                     </button>
-                    <div id="categories-list" class="dropdown-content"
-                         hx-get="/categories"
-                         hx-trigger="load">
-                        <!-- Categories will be loaded here -->
+                    <div class="dropdown">
+                        <button class="categories-btn" onclick="toggleDropdown()">
+                            Categories
+                        </button>
+                        <div id="categories-list" class="dropdown-content"
+                             hx-get="/categories"
+                             hx-trigger="load">
+                            <!-- Categories will be loaded here -->
+                        </div>
                     </div>
                 </div>
             </header>
@@ -41,18 +49,19 @@
             </div>
             <model-viewer id="model-viewer"
                          camera-controls
-                         shadow-intensity="1"
-                         shadow-softness="1"
+                         shadow-intensity="2"
                          exposure="1"
                          environment-image="neutral"
-                         auto-rotate-delay="0"
                          ar
                          ar-modes="webxr scene-viewer quick-look"
                          interaction-prompt="none"
                          camera-orbit="0deg 75deg 105%"
                          min-camera-orbit="auto auto 5%"
                          max-camera-orbit="auto auto 200%"
-                         touch-action="pan-y">
+                         touch-action="pan-y pinch-zoom"
+                         min-field-of-view="10deg"
+                         max-field-of-view="90deg"
+                         >
                 <div class="progress-bar hide" slot="progress-bar">
                     <div class="update-bar"></div>
                 </div>
@@ -149,6 +158,53 @@
             loadingOverlay.classList.remove('active');
             alert('Error loading model');
         });
+
+        // Theme handling
+        function toggleTheme() {
+            const html = document.documentElement;
+            const themeIcon = document.getElementById('theme-icon');
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            html.setAttribute('data-theme', newTheme);
+            themeIcon.textContent = newTheme === 'dark' ? '🌙' : '☀️';
+            
+            // Update model-viewer settings based on theme
+            if (modelViewer) {
+                if (newTheme === 'dark') {
+                    modelViewer.exposure = 0.8;
+                    modelViewer.shadowIntensity = 0.7;
+                    modelViewer.environmentImage = 'neutral';
+                } else {
+                    modelViewer.exposure = 1;
+                    modelViewer.shadowIntensity = 1;
+                    modelViewer.environmentImage = 'neutral';
+                }
+            }
+            
+            // Save theme preference
+            localStorage.setItem('theme', newTheme);
+        }
+
+        // Load saved theme preference
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) {
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            document.getElementById('theme-icon').textContent = savedTheme === 'dark' ? '🌙' : '☀️';
+            
+            // Apply theme-specific model-viewer settings
+            if (modelViewer && savedTheme === 'dark') {
+                modelViewer.exposure = 0.8;
+                modelViewer.shadowIntensity = 0.7;
+            }
+        }
+
+        // Fix for iOS Safari full screen
+        function fixIOSViewport() {
+            document.documentElement.style.height = `${window.innerHeight}px`;
+        }
+        window.addEventListener('resize', fixIOSViewport);
+        fixIOSViewport();
     </script>
 </body>
 </html> 
