@@ -2,8 +2,15 @@
 
 import { useState, useEffect } from "react";
 import { useTheme } from "./context/ThemeContext";
-import "@google/model-viewer";
 
+interface Model {
+  name: string;
+  modelPath: string;
+  thumbnailPath: string;
+  category: string;
+}
+
+// Add the type declaration for model-viewer
 declare global {
   namespace JSX {
     interface IntrinsicElements {
@@ -30,13 +37,6 @@ declare global {
   }
 }
 
-interface Model {
-  name: string;
-  modelPath: string;
-  thumbnailPath: string;
-  category: string;
-}
-
 export default function Home() {
   const [models, setModels] = useState<Model[]>([]);
   const [categories, setCategories] = useState<string[]>(["All"]);
@@ -44,10 +44,20 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const { theme, toggleTheme } = useTheme();
+  const [columnCount, setColumnCount] = useState<number>(6);
 
-  const [columnCount, setColumnCount] = useState(() => {
-    return Number(localStorage.getItem("columns")) || 6;
-  });
+  // Import model-viewer on client side
+  useEffect(() => {
+    import("@google/model-viewer");
+  }, []);
+
+  useEffect(() => {
+    // Initialize column count from localStorage
+    const savedColumns = localStorage.getItem("columns");
+    if (savedColumns) {
+      setColumnCount(Number(savedColumns));
+    }
+  }, []);
 
   const handleColumnChange = (value: string) => {
     const columns = Number(value);
@@ -81,9 +91,9 @@ export default function Home() {
   const fetchModels = async () => {
     try {
       const url =
-        selectedCategory === "All"
-          ? "/api/models"
-          : `/api/models?category=${encodeURIComponent(selectedCategory)}`;
+        selectedCategory !== "All"
+          ? `/api/models/${encodeURIComponent(selectedCategory)}`
+          : "/api/models/All";
 
       const response = await fetch(url);
       if (!response.ok) {
@@ -136,16 +146,11 @@ export default function Home() {
 
   const handleCategorySelect = (category: string) => {
     setSelectedCategory(category);
-    fetchModels();
   };
 
   const filteredModels = models.filter((model) =>
     model.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
-  useEffect(() => {
-    console.log("Selected model changed to:", selectedModel);
-  }, [selectedModel]);
 
   if (selectedModel) {
     console.log("Rendering model-viewer with src:", selectedModel);
@@ -161,7 +166,8 @@ export default function Home() {
           src={selectedModel}
           camera-controls="true"
           auto-rotate="true"
-          shadow-intensity="1"
+          shadow-intensity="2"
+          ar-modes="webxr scene-viewer quick-look"
           exposure="1"
           style={{ width: "100%", height: "100%" }}
         >
