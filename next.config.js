@@ -26,6 +26,11 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  // Copy static files to standalone output
+  outputFileTracing: true,
+  experimental: {
+    outputFileTracingRoot: process.cwd(),
+  },
 };
 
 module.exports = nextConfig; 
