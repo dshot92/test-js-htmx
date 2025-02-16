@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Model Viewer</title>
+    <title>Model Viewer</title>
     <link rel="stylesheet" href="/styles/global.css">
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
@@ -12,18 +12,18 @@
     <div id="app" class="app">
         <div id="gallery-view" class="view">
             <header>
-                <h1>3D Model Viewer</h1>
-                <button class="categories-btn"
-                        hx-get="/api/categories"
-                        hx-target="#categories-list"
-                        hx-swap="innerHTML">
-                    Categories
-                </button>
+                <h2>Model Viewer</h2>
+                <div class="dropdown">
+                    <button class="categories-btn" onclick="toggleDropdown()">
+                        Categories ▼
+                    </button>
+                    <div id="categories-list" class="dropdown-content"
+                         hx-get="/api/categories"
+                         hx-trigger="load">
+                        <!-- Categories will be loaded here -->
+                    </div>
+                </div>
             </header>
-
-            <nav id="categories-list" class="categories-list">
-                <!-- Categories will be loaded here -->
-            </nav>
 
             <main id="content" class="content">
                 <div id="models-grid" class="models-grid"
@@ -64,6 +64,23 @@
         const modelViewer = document.querySelector('#model-viewer');
         const galleryView = document.querySelector('#gallery-view');
         const viewerView = document.querySelector('#viewer-view');
+        const dropdown = document.querySelector('.dropdown');
+
+        function toggleDropdown() {
+            dropdown.classList.toggle('active');
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!dropdown.contains(e.target)) {
+                dropdown.classList.remove('active');
+            }
+        });
+
+        // Close dropdown after selecting a category
+        document.addEventListener('htmx:afterOnLoad', () => {
+            dropdown.classList.remove('active');
+        });
 
         function closeViewer() {
             viewerView.classList.add('hidden');
