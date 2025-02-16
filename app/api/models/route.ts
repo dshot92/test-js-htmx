@@ -4,8 +4,6 @@ import path from 'path'
 
 // Add route segment config
 export const dynamic = 'force-dynamic'
-// Increase the maximum duration for this route
-export const maxDuration = 10; // in seconds
 
 interface Model {
   name: string;
@@ -44,8 +42,6 @@ async function getAllModels(dir: string, category: string, section = ''): Promis
     }
   } catch (err) {
     console.error(`Error reading directory ${dir}:`, err)
-    // Don't throw here, just return empty array for this directory
-    return []
   }
   return models
 }
@@ -56,22 +52,12 @@ export async function GET(request: NextRequest) {
     
     const modelsPath = path.join(process.cwd(), 'public', 'models')
     let categories: string[] = []
-    
     try {
       categories = await fs.readdir(modelsPath)
       console.log('Available categories:', categories)
     } catch (err) {
       console.error('Error reading models directory:', err)
-      // In production (Vercel), we might not be able to read the directory
-      if (process.env.VERCEL) {
-        return NextResponse.json({ 
-          error: 'Unable to access models directory in production. Please ensure all required files are included in the deployment.' 
-        }, { status: 500 })
-      }
-      if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
-        return NextResponse.json({ error: 'Models directory not found' }, { status: 404 })
-      }
-      throw err
+      if ((err as NodeJS.ErrnoException).code !== 'ENOENT') throw err
     }
 
     let allModels: Model[] = []
@@ -89,18 +75,10 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    if (allModels.length === 0) {
-      console.log('No models found')
-      return NextResponse.json({ message: 'No models found' }, { status: 404 })
-    }
-
     console.log(`Returning ${allModels.length} models`)
     return NextResponse.json(allModels)
   } catch (error) {
     console.error('Error loading models:', error)
-    return NextResponse.json({ 
-      error: 'Error loading models',
-      details: process.env.NODE_ENV === 'development' ? (error as Error).message : undefined 
-    }, { status: 500 })
+    return NextResponse.json({ error: 'Error loading models' }, { status: 500 })
   }
 } 
