@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTheme } from "./context/ThemeContext";
 
 interface Model {
   name: string;
@@ -15,6 +16,7 @@ export default function Home() {
   const [selectedModel, setSelectedModel] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     fetchCategories();
@@ -102,6 +104,9 @@ export default function Home() {
         <button className="back-button" onClick={closeViewer}>
           ◂
         </button>
+        <button className="theme-toggle" onClick={toggleTheme}>
+          {theme === "light" ? "🌙" : "☀️"}
+        </button>
         <model-viewer
           src={selectedModel}
           camera-controls="true"
@@ -158,6 +163,9 @@ export default function Home() {
             </option>
           ))}
         </select>
+        <button className="theme-toggle" onClick={toggleTheme}>
+          {theme === "light" ? "🌙" : "☀️"}
+        </button>
       </div>
 
       <div className="grid">
