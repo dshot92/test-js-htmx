@@ -24,6 +24,20 @@ export default function Home() {
     fetchModels();
   }, [selectedCategory]);
 
+  // Handle browser back button
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      if (event.state?.modelPath) {
+        setSelectedModel(event.state.modelPath);
+      } else {
+        setSelectedModel(null);
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
   const fetchModels = async () => {
     try {
       const url =
@@ -64,11 +78,14 @@ export default function Home() {
   };
 
   const showModel = (modelPath: string) => {
+    // Push the current state to history before showing the model
+    window.history.pushState({ modelPath }, "", window.location.pathname);
     setSelectedModel(modelPath);
   };
 
   const closeViewer = () => {
-    setSelectedModel(null);
+    // Go back in history, which will trigger the popstate event
+    window.history.back();
   };
 
   const handleCategorySelect = (category: string) => {
