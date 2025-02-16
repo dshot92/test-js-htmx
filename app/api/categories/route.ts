@@ -5,7 +5,7 @@ import path from 'path'
 export async function GET() {
   try {
     const modelsPath = path.join(process.cwd(), 'public', 'models')
-    let categories = []
+    let categories: string[] = []
     try {
       categories = await fs.readdir(modelsPath)
     } catch (err) {
