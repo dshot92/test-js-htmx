@@ -10,8 +10,7 @@ interface Model {
   section: string;
 }
 
-function createModelObject(filename: string, category: string, section: string): Model {
-  const baseName = filename.replace('.glb', '')
+function createModelObject(baseName: string, category: string, section: string): Model {
   const relativePath = section !== 'Others'
     ? `${category}/${section}/${baseName}`
     : `${category}/${baseName}`
@@ -25,6 +24,8 @@ function createModelObject(filename: string, category: string, section: string):
   }
 }
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: Request, { params }: { params: { category: string } }) {
   try {
     const { category } = params
@@ -32,25 +33,25 @@ export async function GET(request: Request, { params }: { params: { category: st
 
     if (category.toLowerCase() === 'all') {
       // Generate all models
-      Object.entries(MODEL_PATHS as ModelPaths).forEach(([cat, sections]) => {
-        Object.entries(sections).forEach(([section, filenames]) => {
-          (filenames as string[]).forEach((filename: string) => {
-            models.push(createModelObject(filename, cat, section))
-          })
-        })
-      })
+      for (const [cat, sections] of Object.entries(MODEL_PATHS)) {
+        for (const [section, baseNames] of Object.entries(sections)) {
+          for (const baseName of baseNames) {
+            models.push(createModelObject(baseName, cat, section))
+          }
+        }
+      }
     } else {
       // Generate models for specific category
-      const categoryPaths = MODEL_PATHS[category] as { [section: string]: string[] } | undefined
+      const categoryPaths = MODEL_PATHS[category]
       if (!categoryPaths) {
         return NextResponse.json({ error: 'Category not found' }, { status: 404 })
       }
 
-      Object.entries(categoryPaths).forEach(([section, filenames]) => {
-        filenames.forEach((filename: string) => {
-          models.push(createModelObject(filename, category, section))
-        })
-      })
+      for (const [section, baseNames] of Object.entries(categoryPaths)) {
+        for (const baseName of baseNames) {
+          models.push(createModelObject(baseName, category, section))
+        }
+      }
     }
 
     return NextResponse.json(models)
