@@ -52,7 +52,21 @@ export default function Home() {
 
   // Import model-viewer on client side
   useEffect(() => {
-    import("@google/model-viewer");
+    let modelViewerScript: HTMLScriptElement | null = null;
+
+    if (!customElements.get("model-viewer")) {
+      modelViewerScript = document.createElement("script");
+      modelViewerScript.src =
+        "https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js";
+      modelViewerScript.type = "module";
+      document.body.appendChild(modelViewerScript);
+    }
+
+    return () => {
+      if (modelViewerScript) {
+        document.body.removeChild(modelViewerScript);
+      }
+    };
   }, []);
 
   useEffect(() => {

@@ -4,6 +4,15 @@ const nextConfig = {
   async headers() {
     return [
       {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'Permissions-Policy',
+            value: 'browsing-topics=(), interest-cohort=(), join-ad-interest-group=(), attribution-reporting=(), run-ad-auction=(), private-state-token-issuance=(), private-state-token-redemption=()'
+          }
+        ],
+      },
+      {
         source: '/models/:path*',
         headers: [
           {
