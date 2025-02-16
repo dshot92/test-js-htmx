@@ -1,7 +1,7 @@
 'use server'
 
 import { NextResponse } from 'next/server'
-import fs from 'fs/promises'
+import fs from 'fs'
 import path from 'path'
 
 // Define the metadata structure
@@ -10,12 +10,13 @@ interface Model {
   modelPath: string;
   thumbnailPath: string;
   category: string;
+  section: string;
 }
 
 async function getAllModels(dir: string, category: string, section = ''): Promise<Model[]> {
   const models = []
   try {
-    const items = await fs.readdir(dir, { withFileTypes: true })
+    const items = await fs.promises.readdir(dir, { withFileTypes: true })
     
     for (const item of items) {
       const fullPath = path.join(dir, item.name)
@@ -30,13 +31,14 @@ async function getAllModels(dir: string, category: string, section = ''): Promis
           : `${category}/${baseName}`
 
         const modelPath = `/models/${relativePath}.glb`
-        const thumbnailPath = `/thumbnails/${relativePath}.webp`
+        const thumbnailPath = `/thumbnails/${relativePath}.png`
 
         models.push({
           name: baseName.replace(/-/g, ' '),
           modelPath,
           thumbnailPath,
-          category
+          category,
+          section
         })
       }
     }
@@ -50,7 +52,7 @@ async function getAllModels(dir: string, category: string, section = ''): Promis
 export async function generateStaticParams() {
   const modelsPath = path.join(process.cwd(), 'public', 'models')
   try {
-    const categories = await fs.readdir(modelsPath)
+    const categories = await fs.promises.readdir(modelsPath)
     return ['All', ...categories].map(category => ({
       category
     }))
@@ -62,33 +64,121 @@ export async function generateStaticParams() {
 
 export async function GET(request: Request, { params }: { params: { category: string } }) {
   try {
-    const modelsPath = path.join(process.cwd(), 'public', 'models')
-    const requestedCategory = params.category
-    
-    if (requestedCategory && requestedCategory !== 'All') {
-      const categoryPath = path.join(modelsPath, requestedCategory)
-      try {
-        // Check if the category directory exists
-        await fs.access(categoryPath)
-        const models = await getAllModels(categoryPath, requestedCategory)
-        return NextResponse.json(models)
-      } catch {
-        // If category doesn't exist, return empty array
-        return NextResponse.json([])
+    const category = params.category;
+    const modelsPath = path.join(process.cwd(), "public", "models");
+
+    // Helper function to create model object
+    const createModelObject = (
+      modelName: string,
+      category: string,
+      section: string = "",
+      modelFile: string
+    ): Model => {
+      const modelBasePath = section 
+        ? `/models/${category}/${section}`
+        : `/models/${category}`;
+      
+      const thumbnailBasePath = section
+        ? `/thumbnails/${category}/${section}`
+        : `/thumbnails/${category}`;
+
+      return {
+        name: modelName.replace(/-/g, ' '),
+        modelPath: `${modelBasePath}/${modelFile}`,
+        thumbnailPath: `${thumbnailBasePath}/${modelName}.png`,
+        category,
+        section
+      };
+    };
+
+    // Helper function to process models in a directory
+    const processModelsInDirectory = (
+      dirPath: string,
+      category: string,
+      section: string = ""
+    ): Model[] => {
+      const models = fs.readdirSync(dirPath)
+        .filter(file => file.endsWith('.glb'))
+        .map(model => {
+          const modelName = path.basename(model, '.glb');
+          return createModelObject(modelName, category, section, model);
+        });
+      return models;
+    };
+
+    if (category === "All") {
+      const allModels: Model[] = [];
+      const categories = fs.readdirSync(modelsPath)
+        .filter(item => fs.statSync(path.join(modelsPath, item)).isDirectory());
+
+      for (const cat of categories) {
+        const catPath = path.join(modelsPath, cat);
+        const items = fs.readdirSync(catPath);
+        const sections = items
+          .filter(item => fs.statSync(path.join(catPath, item)).isDirectory());
+
+        if (sections.length === 0) {
+          // No sections, add models directly
+          allModels.push(...processModelsInDirectory(catPath, cat));
+        } else {
+          // Process sections
+          for (const section of sections) {
+            const sectionPath = path.join(catPath, section);
+            allModels.push(...processModelsInDirectory(sectionPath, cat, section));
+          }
+
+          // Process models in root (if any) as "Other" section
+          const rootModels = items
+            .filter(file => file.endsWith('.glb') && !sections.includes(path.basename(file, '.glb')));
+          
+          if (rootModels.length > 0) {
+            rootModels.forEach(model => {
+              const modelName = path.basename(model, '.glb');
+              allModels.push(createModelObject(modelName, cat, "Other", model));
+            });
+          }
+        }
+      }
+      return NextResponse.json(allModels);
+    }
+
+    // Handle specific category
+    const categoryPath = path.join(modelsPath, category);
+    if (!fs.existsSync(categoryPath)) {
+      return NextResponse.json([]);
+    }
+
+    const items = fs.readdirSync(categoryPath);
+    const sections = items
+      .filter(item => fs.statSync(path.join(categoryPath, item)).isDirectory());
+
+    const categoryModels: Model[] = [];
+
+    if (sections.length === 0) {
+      // No sections, add models directly
+      categoryModels.push(...processModelsInDirectory(categoryPath, category));
+    } else {
+      // Process sections
+      for (const section of sections) {
+        const sectionPath = path.join(categoryPath, section);
+        categoryModels.push(...processModelsInDirectory(sectionPath, category, section));
+      }
+
+      // Process models in root (if any) as "Other" section
+      const rootModels = items
+        .filter(file => file.endsWith('.glb') && !sections.includes(path.basename(file, '.glb')));
+      
+      if (rootModels.length > 0) {
+        rootModels.forEach(model => {
+          const modelName = path.basename(model, '.glb');
+          categoryModels.push(createModelObject(modelName, category, "Other", model));
+        });
       }
     }
-    
-    // Return all models if category is 'All'
-    const categories = await fs.readdir(modelsPath)
-    const allModelsPromises = categories.map(category => 
-      getAllModels(path.join(modelsPath, category), category)
-    )
-    const allModelsArrays = await Promise.all(allModelsPromises)
-    const allModels = allModelsArrays.flat()
-    
-    return NextResponse.json(allModels)
+
+    return NextResponse.json(categoryModels);
   } catch (error) {
-    console.error('Error loading models:', error)
-    return NextResponse.json({ error: 'Error loading models' }, { status: 500 })
+    console.error("Error processing models:", error);
+    return NextResponse.json({ error: "Failed to process models" }, { status: 500 });
   }
 } 

@@ -8,6 +8,7 @@ interface Model {
   modelPath: string;
   thumbnailPath: string;
   category: string;
+  section: string;
 }
 
 // Add the type declaration for model-viewer
@@ -45,6 +46,9 @@ export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const { theme, toggleTheme } = useTheme();
   const [columnCount, setColumnCount] = useState<number>(6);
+  const [collapsedSections, setCollapsedSections] = useState<{
+    [key: string]: boolean;
+  }>({});
 
   // Import model-viewer on client side
   useEffect(() => {
@@ -58,6 +62,19 @@ export default function Home() {
       setColumnCount(Number(savedColumns));
     }
   }, []);
+
+  // Initialize collapsed sections state when models change
+  useEffect(() => {
+    const sections = new Set(models.map((model) => model.section));
+    const initialCollapsedState = Array.from(sections).reduce(
+      (acc, section) => {
+        acc[section] = false;
+        return acc;
+      },
+      {} as { [key: string]: boolean }
+    );
+    setCollapsedSections(initialCollapsedState);
+  }, [models]);
 
   const handleColumnChange = (value: string) => {
     const columns = Number(value);
@@ -152,6 +169,49 @@ export default function Home() {
     model.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const toggleSection = (section: string) => {
+    setCollapsedSections((prev) => ({
+      ...prev,
+      [section]: !prev[section],
+    }));
+  };
+
+  const groupModelsBySection = () => {
+    const grouped: { [category: string]: { [section: string]: Model[] } } = {};
+    filteredModels.forEach((model) => {
+      if (!grouped[model.category]) {
+        grouped[model.category] = {};
+      }
+
+      if (selectedCategory === "All") {
+        // When showing all categories, don't use sections
+        if (!grouped[model.category]["models"]) {
+          grouped[model.category]["models"] = [];
+        }
+        grouped[model.category]["models"].push(model);
+      } else {
+        // Use sections only when a specific category is selected
+        if (!model.section) {
+          if (!grouped[model.category]["models"]) {
+            grouped[model.category]["models"] = [];
+          }
+          grouped[model.category]["models"].push(model);
+        } else {
+          if (!grouped[model.category][model.section]) {
+            grouped[model.category][model.section] = [];
+          }
+          grouped[model.category][model.section].push(model);
+        }
+      }
+    });
+    return grouped;
+  };
+
+  useEffect(() => {
+    document.title =
+      selectedCategory === "All" ? "3D Model Gallery" : selectedCategory;
+  }, [selectedCategory]);
+
   if (selectedModel) {
     console.log("Rendering model-viewer with src:", selectedModel);
     return (
@@ -179,10 +239,14 @@ export default function Home() {
     );
   }
 
+  const groupedModels = groupModelsBySection();
+
   return (
     <>
       <div className="header">
-        <h1>{selectedCategory}</h1>
+        <h1>
+          {selectedCategory === "All" ? "3D Model Gallery" : selectedCategory}
+        </h1>
       </div>
 
       <div className="controls">
@@ -233,25 +297,114 @@ export default function Home() {
         </button>
       </div>
 
-      <div
-        className="grid"
-        style={{
-          gridTemplateColumns: `repeat(${columnCount}, 1fr)`,
-          gap: "1.5rem",
-        }}
-      >
-        {filteredModels.map((model) => (
-          <div
-            key={model.name}
-            className="card"
-            onClick={() => showModel(model.modelPath)}
-          >
-            <div className="card-image">
-              <img src={model.thumbnailPath} alt={model.name} loading="lazy" />
+      <div className="categories-container">
+        {selectedCategory === "All" ? (
+          Object.entries(groupedModels).map(([category, sections]) => (
+            <div key={category} className="category-section">
+              <h2 className="category-title">{category}</h2>
+              <div
+                className="grid"
+                style={{
+                  gridTemplateColumns: `repeat(${columnCount}, 1fr)`,
+                  gap: "1.5rem",
+                }}
+              >
+                {sections["models"].map((model) => (
+                  <div
+                    key={model.name}
+                    className="card"
+                    onClick={() => showModel(model.modelPath)}
+                  >
+                    <div className="card-image">
+                      <img
+                        src={model.thumbnailPath}
+                        alt={model.name}
+                        loading="lazy"
+                      />
+                    </div>
+                    <div className="card-title">{model.name}</div>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="card-title">{model.name}</div>
+          ))
+        ) : (
+          <div className="category-section">
+            <div className="sections-container">
+              {Object.entries(groupedModels[selectedCategory] || {}).map(
+                ([section, sectionModels]) =>
+                  section === "models" ? (
+                    // Render models directly without section header when no sections exist
+                    <div
+                      key={section}
+                      className="grid"
+                      style={{
+                        gridTemplateColumns: `repeat(${columnCount}, 1fr)`,
+                        gap: "1.5rem",
+                      }}
+                    >
+                      {sectionModels.map((model) => (
+                        <div
+                          key={model.name}
+                          className="card"
+                          onClick={() => showModel(model.modelPath)}
+                        >
+                          <div className="card-image">
+                            <img
+                              src={model.thumbnailPath}
+                              alt={model.name}
+                              loading="lazy"
+                            />
+                          </div>
+                          <div className="card-title">{model.name}</div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    // Render section with header for categorized models
+                    <div key={section} className="section">
+                      <div
+                        className="section-header"
+                        onClick={() => toggleSection(section)}
+                        style={{ cursor: "pointer" }}
+                      >
+                        <h3>{section}</h3>
+                        <span className="collapse-icon">
+                          {collapsedSections[section] ? "▼" : "▲"}
+                        </span>
+                      </div>
+                      {!collapsedSections[section] && (
+                        <div
+                          className="grid"
+                          style={{
+                            gridTemplateColumns: `repeat(${columnCount}, 1fr)`,
+                            gap: "1.5rem",
+                          }}
+                        >
+                          {sectionModels.map((model) => (
+                            <div
+                              key={model.name}
+                              className="card"
+                              onClick={() => showModel(model.modelPath)}
+                            >
+                              <div className="card-image">
+                                <img
+                                  src={model.thumbnailPath}
+                                  alt={model.name}
+                                  loading="lazy"
+                                />
+                              </div>
+                              <div className="card-title">{model.name}</div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )
+              )}
+            </div>
           </div>
-        ))}
+        )}
       </div>
     </>
   );
