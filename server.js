@@ -6,13 +6,13 @@ const app = express();
 const PORT = 3000;
 
 // Serve static files
-app.use(express.static('static'));
+app.use(express.static('public'));
 app.use('/styles', express.static('styles'));
 
 // Get categories
 app.get('/api/categories', async (req, res) => {
     try {
-        const modelsPath = path.join(__dirname, 'static', 'models');
+        const modelsPath = path.join(__dirname, 'public', 'models');
         const categories = await fs.readdir(modelsPath);
         
         const html = [
@@ -42,7 +42,7 @@ app.get('/api/categories', async (req, res) => {
 // Get all models from all categories
 app.get('/api/models/all', async (req, res) => {
     try {
-        const modelsPath = path.join(__dirname, 'static', 'models');
+        const modelsPath = path.join(__dirname, 'public', 'models');
         const categories = await fs.readdir(modelsPath);
         
         let allModels = [];
@@ -74,7 +74,7 @@ app.get('/api/models/all', async (req, res) => {
 app.get('/api/models/:category', async (req, res) => {
     try {
         const category = req.params.category;
-        const categoryPath = path.join(__dirname, 'static', 'models', category);
+        const categoryPath = path.join(__dirname, 'public', 'models', category);
         const models = await getAllModels(categoryPath, category);
 
         const html = models.map(model => `
