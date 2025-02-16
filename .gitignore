@@ -1,3 +1,6 @@
 public/models/
 public/thumbnails/
 
+!public/models/cars/*
+!public/thumbnails/cars/*
+
