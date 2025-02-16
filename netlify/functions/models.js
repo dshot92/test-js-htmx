@@ -36,7 +36,7 @@ async function getAllModels(dir, category, section = '') {
 
 exports.handler = async function(event, context) {
   try {
-    const modelsPath = path.join(__dirname, '..', '..', 'models');
+    const modelsPath = './models';
     const categories = await fs.readdir(modelsPath);
 
     let allModels = [];
@@ -64,6 +64,9 @@ exports.handler = async function(event, context) {
     };
   } catch (error) {
     console.error('Error loading all models:', error);
+    console.error('Current directory:', process.cwd());
+    console.error('Attempted models path:', modelsPath);
+    console.error('Directory contents:', await fs.readdir('.').catch(e => 'Failed to read directory: ' + e));
     return {
       statusCode: 500,
       body: 'Error loading models'
