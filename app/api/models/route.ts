@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, NextRequest } from 'next/server'
 import fs from 'fs/promises'
 import path from 'path'
 
@@ -43,10 +43,9 @@ async function getAllModels(dir: string, category: string, section = ''): Promis
   return models
 }
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
-    const requestedCategory = searchParams.get('category')
+    const requestedCategory = request.nextUrl.searchParams.get('category')
     
     const modelsPath = path.join(process.cwd(), 'public', 'models')
     let categories: string[] = []

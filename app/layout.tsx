@@ -17,6 +17,18 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+        />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta
+          name="apple-mobile-web-app-status-bar-style"
+          content="black-translucent"
+        />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="ar-status" content="ready" />
+        <meta name="ar-mode" content="webxr scene-viewer quick-look" />
         <script
           type="module"
           src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.1.1/model-viewer.min.js"
