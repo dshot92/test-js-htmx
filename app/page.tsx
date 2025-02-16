@@ -1,83 +1,90 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect } from "react";
 
 interface Model {
-  name: string
-  modelPath: string
-  thumbnailPath: string
-  category: string
+  name: string;
+  modelPath: string;
+  thumbnailPath: string;
+  category: string;
 }
 
 export default function Home() {
-  const [models, setModels] = useState<Model[]>([])
-  const [categories, setCategories] = useState<string[]>(["All"])
-  const [selectedModel, setSelectedModel] = useState<string | null>(null)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState("All")
+  const [models, setModels] = useState<Model[]>([]);
+  const [categories, setCategories] = useState<string[]>(["All"]);
+  const [selectedModel, setSelectedModel] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
 
   useEffect(() => {
-    fetchCategories()
-  }, [])
+    fetchCategories();
+  }, []);
 
   useEffect(() => {
-    fetchModels()
-  }, [selectedCategory])
+    fetchModels();
+  }, [selectedCategory]);
 
   const fetchModels = async () => {
     try {
-      const url = selectedCategory === "All" 
-        ? '/api/models'
-        : `/api/models?category=${encodeURIComponent(selectedCategory)}`
-      
-      const response = await fetch(url)
+      const url =
+        selectedCategory === "All"
+          ? "/api/models"
+          : `/api/models?category=${encodeURIComponent(selectedCategory)}`;
+
+      const response = await fetch(url);
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-      const data = await response.json()
-      setModels(data)
+      const data = await response.json();
+      setModels(data);
     } catch (error) {
-      console.error('Error fetching models:', error)
+      console.error("Error fetching models:", error);
     }
-  }
+  };
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch('/api/categories')
+      const response = await fetch("/api/categories");
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-      const data = await response.json()
-      setCategories(["All", ...data])
+      const data = await response.json();
+      setCategories(["All", ...data]);
     } catch (error) {
-      console.error('Error fetching categories:', error)
+      console.error("Error fetching categories:", error);
     }
-  }
+  };
 
   const filterModels = (query: string) => {
-    setSearchQuery(query)
-  }
+    setSearchQuery(query);
+  };
+
+  const clearSearch = () => {
+    setSearchQuery("");
+  };
 
   const showModel = (modelPath: string) => {
-    setSelectedModel(modelPath)
-  }
+    setSelectedModel(modelPath);
+  };
 
   const closeViewer = () => {
-    setSelectedModel(null)
-  }
+    setSelectedModel(null);
+  };
 
   const handleCategorySelect = (category: string) => {
-    setSelectedCategory(category)
-  }
+    setSelectedCategory(category);
+  };
 
-  const filteredModels = models.filter(model => 
+  const filteredModels = models.filter((model) =>
     model.name.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  );
 
   if (selectedModel) {
     return (
       <div className="viewer-container">
-        <button className="back-button" onClick={closeViewer}>◂</button>
+        <button className="back-button" onClick={closeViewer}>
+          ◂
+        </button>
         <model-viewer
           src={selectedModel}
           camera-controls="true"
@@ -95,7 +102,7 @@ export default function Home() {
           max-field-of-view="90deg"
         />
       </div>
-    )
+    );
   }
 
   return (
@@ -105,23 +112,35 @@ export default function Home() {
       </div>
 
       <div className="controls">
-        <select 
+        <div className="search-container">
+          <input
+            type="text"
+            placeholder="Search models..."
+            value={searchQuery}
+            onChange={(e) => filterModels(e.target.value)}
+            className="search-input"
+          />
+          {searchQuery && (
+            <button
+              className="clear-button"
+              onClick={clearSearch}
+              aria-label="Clear search"
+            >
+              ×
+            </button>
+          )}
+        </div>
+        <select
           value={selectedCategory}
           onChange={(e) => handleCategorySelect(e.target.value)}
           className="select"
         >
           {categories.map((category) => (
-            <option key={category} value={category}>{category}</option>
+            <option key={category} value={category}>
+              {category}
+            </option>
           ))}
         </select>
-
-        <input
-          type="text"
-          placeholder="Search models..."
-          value={searchQuery}
-          onChange={(e) => filterModels(e.target.value)}
-          className="search-input"
-        />
       </div>
 
       <div className="grid">
@@ -132,18 +151,12 @@ export default function Home() {
             onClick={() => showModel(model.modelPath)}
           >
             <div className="card-image">
-              <img 
-                src={model.thumbnailPath} 
-                alt={model.name}
-                loading="lazy"
-              />
+              <img src={model.thumbnailPath} alt={model.name} loading="lazy" />
             </div>
-            <div className="card-title">
-              {model.name}
-            </div>
+            <div className="card-title">{model.name}</div>
           </div>
         ))}
       </div>
     </>
-  )
-} 
+  );
+}
