@@ -206,12 +206,9 @@ export default function Home() {
         <model-viewer
           src={selectedModel}
           camera-controls="true"
-          auto-rotate="true"
           shadow-intensity="2"
           ar="true"
           ar-modes="webxr scene-viewer quick-look"
-          ar-scale="fixed"
-          ar-placement="floor"
           interaction-prompt="none"
           environment-image="neutral"
           exposure="1"
