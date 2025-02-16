@@ -2,7 +2,14 @@ import { NextResponse } from 'next/server'
 import fs from 'fs/promises'
 import path from 'path'
 
-async function getAllModels(dir: string, category: string, section = '') {
+interface Model {
+  name: string;
+  modelPath: string;
+  thumbnailPath: string;
+  category: string;
+}
+
+async function getAllModels(dir: string, category: string, section = ''): Promise<Model[]> {
   const models = []
   try {
     const items = await fs.readdir(dir, { withFileTypes: true })
@@ -42,7 +49,7 @@ export async function GET(request: Request) {
     const requestedCategory = searchParams.get('category')
     
     const modelsPath = path.join(process.cwd(), 'public', 'models')
-    let categories = []
+    let categories: string[] = []
     try {
       categories = await fs.readdir(modelsPath)
       console.log('Available categories:', categories)
@@ -51,7 +58,7 @@ export async function GET(request: Request) {
       if ((err as NodeJS.ErrnoException).code !== 'ENOENT') throw err
     }
 
-    let allModels = []
+    let allModels: Model[] = []
     if (requestedCategory && requestedCategory !== 'All' && categories.includes(requestedCategory)) {
       console.log(`Loading models for category: ${requestedCategory}`)
       const categoryPath = path.join(modelsPath, requestedCategory)
