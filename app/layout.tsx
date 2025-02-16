@@ -1,12 +1,29 @@
 import "./globals.css";
 import { Inter } from "next/font/google";
 import { ThemeProvider } from "./context/ThemeContext";
+import { Viewport } from "next";
 
 const inter = Inter({ subsets: ["latin"] });
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  themeColor: "#000000",
+};
 
 export const metadata = {
   title: "3D Model Viewer",
   description: "View and interact with 3D models",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Model Viewer",
+  },
+  formatDetection: {
+    telephone: false,
+  },
 };
 
 export default function RootLayout({
