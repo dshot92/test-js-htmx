@@ -2,6 +2,33 @@
 
 import { useState, useEffect } from "react";
 import { useTheme } from "./context/ThemeContext";
+import "@google/model-viewer";
+
+declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      "model-viewer": React.DetailedHTMLProps<
+        React.HTMLAttributes<HTMLElement> & {
+          src?: string;
+          "camera-controls"?: string;
+          "shadow-intensity"?: string;
+          exposure?: string;
+          "environment-image"?: string;
+          ar?: string;
+          "ar-modes"?: string;
+          "interaction-prompt"?: string;
+          "camera-orbit"?: string;
+          "min-camera-orbit"?: string;
+          "max-camera-orbit"?: string;
+          "touch-action"?: string;
+          "min-field-of-view"?: string;
+          "max-field-of-view"?: string;
+        },
+        HTMLElement
+      >;
+    }
+  }
+}
 
 interface Model {
   name: string;
@@ -18,37 +45,19 @@ export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const { theme, toggleTheme } = useTheme();
 
-  const COLUMN_CONFIG = {
-    DEFAULT: 6,
-    MIN: 1,
-    MAX: 8,
-  } as const;
-
-  const [columnCount, setColumnCount] = useState<number>(() => {
-    if (typeof window === "undefined") return COLUMN_CONFIG.DEFAULT;
-    const saved = localStorage.getItem("columnCount");
-    if (!saved) {
-      localStorage.setItem("columnCount", COLUMN_CONFIG.DEFAULT.toString());
-      return COLUMN_CONFIG.DEFAULT;
-    }
-    const parsed = Number(saved);
-    if (
-      isNaN(parsed) ||
-      parsed < COLUMN_CONFIG.MIN ||
-      parsed > COLUMN_CONFIG.MAX
-    ) {
-      localStorage.setItem("columnCount", COLUMN_CONFIG.DEFAULT.toString());
-      return COLUMN_CONFIG.DEFAULT;
-    }
-    return parsed;
+  const [columnCount, setColumnCount] = useState(() => {
+    return Number(localStorage.getItem("columns")) || 6;
   });
 
-  useEffect(() => {
-    localStorage.setItem("columnCount", columnCount.toString());
-  }, [columnCount]);
+  const handleColumnChange = (value: string) => {
+    const columns = Number(value);
+    setColumnCount(columns);
+    localStorage.setItem("columns", value);
+  };
 
   useEffect(() => {
     fetchCategories();
+    fetchModels();
   }, []);
 
   useEffect(() => {
@@ -109,9 +118,15 @@ export default function Home() {
   };
 
   const showModel = (modelPath: string) => {
-    // Push the current state to history before showing the model
-    window.history.pushState({ modelPath }, "", window.location.pathname);
-    setSelectedModel(modelPath);
+    console.log("Model path before:", modelPath);
+    const fullPath = modelPath.startsWith("/") ? modelPath : `/${modelPath}`;
+    console.log("Model path after:", fullPath);
+    window.history.pushState(
+      { modelPath: fullPath },
+      "",
+      window.location.pathname
+    );
+    setSelectedModel(fullPath);
   };
 
   const closeViewer = () => {
@@ -121,13 +136,19 @@ export default function Home() {
 
   const handleCategorySelect = (category: string) => {
     setSelectedCategory(category);
+    fetchModels();
   };
 
   const filteredModels = models.filter((model) =>
     model.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  useEffect(() => {
+    console.log("Selected model changed to:", selectedModel);
+  }, [selectedModel]);
+
   if (selectedModel) {
+    console.log("Rendering model-viewer with src:", selectedModel);
     return (
       <div className="viewer-container">
         <button className="back-button" onClick={closeViewer}>
@@ -139,19 +160,15 @@ export default function Home() {
         <model-viewer
           src={selectedModel}
           camera-controls="true"
-          shadow-intensity="2"
+          auto-rotate="true"
+          shadow-intensity="1"
           exposure="1"
-          environment-image="neutral"
-          ar="true"
-          ar-modes="webxr scene-viewer quick-look"
-          interaction-prompt="none"
-          camera-orbit="0deg 75deg 105%"
-          min-camera-orbit="auto auto 5%"
-          max-camera-orbit="auto auto 200%"
-          touch-action="pan-y pinch-zoom"
-          min-field-of-view="10deg"
-          max-field-of-view="90deg"
-        />
+          style={{ width: "100%", height: "100%" }}
+        >
+          <div className="progress-bar hide" slot="progress-bar">
+            <div className="update-bar"></div>
+          </div>
+        </model-viewer>
       </div>
     );
   }
@@ -195,13 +212,10 @@ export default function Home() {
         <div className="column-control">
           <select
             value={columnCount}
-            onChange={(e) => setColumnCount(Number(e.target.value))}
+            onChange={(e) => handleColumnChange(e.target.value)}
             className="select"
           >
-            {Array.from(
-              { length: COLUMN_CONFIG.MAX - COLUMN_CONFIG.MIN + 1 },
-              (_, i) => i + COLUMN_CONFIG.MIN
-            ).map((count) => (
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((count) => (
               <option key={count} value={count}>
                 {count} {count === 1 ? "Column" : "Columns"}
               </option>
