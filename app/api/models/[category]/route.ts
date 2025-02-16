@@ -31,14 +31,14 @@ async function getAllModels(dir: string, category: string, section = ''): Promis
           : `${category}/${baseName}`
 
         const modelPath = `/models/${relativePath}.glb`
-        const thumbnailPath = `/thumbnails/${relativePath}.png`
+        const thumbnailPath = `/thumbnails/${relativePath}.webp`
 
         models.push({
           name: baseName.replace(/-/g, ' '),
           modelPath,
           thumbnailPath,
           category,
-          section
+          section: section || 'Others'
         })
       }
     }
@@ -74,20 +74,21 @@ export async function GET(request: Request, { params }: { params: { category: st
       section: string = "",
       modelFile: string
     ): Model => {
-      const modelBasePath = section 
+      // For "Other" section, use the root category path
+      const modelBasePath = section && section !== "Other"
         ? `/models/${category}/${section}`
         : `/models/${category}`;
       
-      const thumbnailBasePath = section
+      const thumbnailBasePath = section && section !== "Other"
         ? `/thumbnails/${category}/${section}`
         : `/thumbnails/${category}`;
 
       return {
         name: modelName.replace(/-/g, ' '),
         modelPath: `${modelBasePath}/${modelFile}`,
-        thumbnailPath: `${thumbnailBasePath}/${modelName}.png`,
+        thumbnailPath: `${thumbnailBasePath}/${modelName}.webp`,
         category,
-        section
+        section: section || "Other"
       };
     };
 
