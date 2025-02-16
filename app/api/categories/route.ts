@@ -1,20 +1,14 @@
 import { NextResponse } from 'next/server'
-import fs from 'fs/promises'
-import path from 'path'
+import { MODEL_PATHS } from '../../data/model-paths'
+
+export const dynamic = 'force-static'
+export const revalidate = false
 
 export async function GET() {
-  try {
-    const modelsPath = path.join(process.cwd(), 'public', 'models')
-    let categories: string[] = []
-    try {
-      categories = await fs.readdir(modelsPath)
-    } catch (err) {
-      if ((err as NodeJS.ErrnoException).code !== 'ENOENT') throw err
-    }
-    
-    return NextResponse.json(categories)
-  } catch (error) {
-    console.error('Error loading categories:', error)
-    return NextResponse.json({ error: 'Error loading categories' }, { status: 500 })
-  }
+  const categories = Object.keys(MODEL_PATHS).map(category => ({
+    name: category,
+    path: `/api/models/${category}`
+  }))
+
+  return NextResponse.json(categories)
 } 

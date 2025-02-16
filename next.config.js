@@ -21,11 +21,23 @@ const nextConfig = {
           },
         ],
       },
+      {
+        source: '/api/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, stale-while-revalidate=31536000',
+          },
+        ],
+      },
     ]
   },
   images: {
     unoptimized: true,
   },
+  generateBuildId: async () => 'build',
+  poweredByHeader: false,
+  compress: true,
   // Copy static files to standalone output
   outputFileTracing: true,
   experimental: {

@@ -24,7 +24,15 @@ function createModelObject(baseName: string, category: string, section: string):
   }
 }
 
-export const dynamic = 'force-dynamic'
+export const dynamic = 'force-static'
+export const revalidate = false
+
+// Generate static params for all possible categories
+export function generateStaticParams() {
+  return ['all', ...Object.keys(MODEL_PATHS)].map(category => ({
+    category: category.toLowerCase()
+  }))
+}
 
 export async function GET(request: Request, { params }: { params: { category: string } }) {
   try {
