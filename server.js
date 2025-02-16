@@ -25,14 +25,14 @@ app.get('/categories', async (req, res) => {
         
         const html = [
             `<div class="category-item"
-                  hx-get="/.netlify/functions/models"
+                  hx-get="/models"
                   hx-target="#models-grid"
                   hx-swap="innerHTML">
                 All Models
             </div>`,
             ...categories.map(category => `
                 <div class="category-item"
-                     hx-get="/.netlify/functions/models?category=${category}"
+                     hx-get="/models?category=${category}"
                      hx-target="#models-grid"
                      hx-swap="innerHTML">
                     ${category}
