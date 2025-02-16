@@ -27,3 +27,14 @@ pids
 *.pid
 *.seed
 *.pid.lock
+
+# Netlify specific
+.netlify/
+.netlify.app
+.netlify/state.json
+.netlify/edge-functions-import-map.json
+
+# Build output
+dist/
+build/
+.output/
