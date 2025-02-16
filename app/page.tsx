@@ -11,33 +11,6 @@ interface Model {
   section: string;
 }
 
-// Add the type declaration for model-viewer
-declare global {
-  namespace JSX {
-    interface IntrinsicElements {
-      "model-viewer": React.DetailedHTMLProps<
-        React.HTMLAttributes<HTMLElement> & {
-          src?: string;
-          "camera-controls"?: string;
-          "shadow-intensity"?: string;
-          exposure?: string;
-          "environment-image"?: string;
-          ar?: string;
-          "ar-modes"?: string;
-          "interaction-prompt"?: string;
-          "camera-orbit"?: string;
-          "min-camera-orbit"?: string;
-          "max-camera-orbit"?: string;
-          "touch-action"?: string;
-          "min-field-of-view"?: string;
-          "max-field-of-view"?: string;
-        },
-        HTMLElement
-      >;
-    }
-  }
-}
-
 export default function Home() {
   const [models, setModels] = useState<Model[]>([]);
   const [categories, setCategories] = useState<string[]>(["All"]);
@@ -52,21 +25,18 @@ export default function Home() {
 
   // Import model-viewer on client side
   useEffect(() => {
-    let modelViewerScript: HTMLScriptElement | null = null;
-
-    if (!customElements.get("model-viewer")) {
-      modelViewerScript = document.createElement("script");
+    const scriptId = "model-viewer-script";
+    if (
+      !document.getElementById(scriptId) &&
+      !customElements.get("model-viewer")
+    ) {
+      const modelViewerScript = document.createElement("script");
+      modelViewerScript.id = scriptId;
       modelViewerScript.src =
-        "https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js";
+        "https://cdn.jsdelivr.net/npm/@google/model-viewer/dist/model-viewer.min.js";
       modelViewerScript.type = "module";
       document.body.appendChild(modelViewerScript);
     }
-
-    return () => {
-      if (modelViewerScript) {
-        document.body.removeChild(modelViewerScript);
-      }
-    };
   }, []);
 
   useEffect(() => {
@@ -215,11 +185,22 @@ export default function Home() {
   if (selectedModel) {
     console.log("Rendering model-viewer with src:", selectedModel);
     return (
-      <div className="viewer-container">
-        <button className="back-button" onClick={closeViewer}>
+      <div
+        className="viewer-container"
+        style={{ position: "relative", width: "100%", height: "100vh" }}
+      >
+        <button
+          className="back-button"
+          onClick={closeViewer}
+          style={{ zIndex: 2000, position: "absolute", top: 16, left: 16 }}
+        >
           ◂
         </button>
-        <button className="theme-toggle" onClick={toggleTheme}>
+        <button
+          className="theme-toggle"
+          onClick={toggleTheme}
+          style={{ zIndex: 2000, position: "absolute", top: 16, right: 16 }}
+        >
           {theme === "light" ? "🌙" : "☀️"}
         </button>
         <model-viewer
@@ -227,14 +208,58 @@ export default function Home() {
           camera-controls="true"
           auto-rotate="true"
           shadow-intensity="2"
+          ar="true"
           ar-modes="webxr scene-viewer quick-look"
+          ar-scale="fixed"
+          ar-placement="floor"
+          interaction-prompt="none"
+          environment-image="neutral"
           exposure="1"
-          style={{ width: "100%", height: "100%" }}
+          style={{
+            width: "100%",
+            height: "100%",
+            position: "absolute",
+            top: 0,
+            left: 0,
+            backgroundColor: theme === "light" ? "#ffffff" : "#000000",
+          }}
+        ></model-viewer>
+        <button
+          onClick={() => {
+            const viewer = document.querySelector("model-viewer") as any;
+            viewer?.activateAR();
+          }}
+          style={{
+            position: "fixed",
+            bottom: "24px",
+            right: "24px",
+            border: "none",
+            borderRadius: "50%",
+            width: "48px",
+            height: "48px",
+            backgroundColor: theme === "light" ? "#ffffff" : "#1a1a1a",
+            color: theme === "light" ? "#1a1a1a" : "#ffffff",
+            boxShadow: "0 4px 8px rgba(0,0,0,0.2)",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "12px",
+            zIndex: 2000,
+          }}
         >
-          <div className="progress-bar hide" slot="progress-bar">
-            <div className="update-bar"></div>
-          </div>
-        </model-viewer>
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            style={{ width: "100%", height: "100%" }}
+          >
+            <path d="M4 4h4M16 4h4M4 20h4M16 20h4M4 4v4M4 16v4M20 4v4M20 16v4" />
+            <path d="M9 12l3-2l3 2l-3 2l-3-2" />
+            <path d="M12 10v-2M12 14v2M9 12H7M15 12h2" />
+          </svg>
+        </button>
       </div>
     );
   }
