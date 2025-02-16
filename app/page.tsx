@@ -144,7 +144,7 @@ export default function Home() {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
-      setCategories(["All", ...data]);
+      setCategories(["All", ...data.map((cat: any) => cat.name)]);
     } catch (error) {
       console.error("Error fetching categories:", error);
     }
