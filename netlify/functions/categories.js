@@ -3,7 +3,7 @@ const fs = require('fs').promises;
 
 exports.handler = async function(event, context) {
   try {
-    const modelsPath = path.join(process.cwd(), 'public', 'models');
+    const modelsPath = path.join(__dirname, '..', '..', 'models');
     const categories = await fs.readdir(modelsPath);
     
     const html = [
@@ -32,6 +32,7 @@ exports.handler = async function(event, context) {
     };
   } catch (error) {
     console.error('Error loading categories:', error);
+    console.error('Directory attempted:', modelsPath);
     return {
       statusCode: 500,
       body: 'Error loading categories'

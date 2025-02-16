@@ -27,13 +27,16 @@ async function getAllModels(dir, category, section = '') {
     }
   } catch (err) {
     console.error('Error in getAllModels:', err);
+    console.error('Directory attempted:', dir);
+    console.error('Category:', category);
+    console.error('Section:', section);
   }
   return models;
 }
 
 exports.handler = async function(event, context) {
   try {
-    const modelsPath = path.join(process.cwd(), 'public', 'models');
+    const modelsPath = path.join(__dirname, '..', '..', 'models');
     const categories = await fs.readdir(modelsPath);
 
     let allModels = [];
