@@ -36,7 +36,7 @@ async function getAllModels(dir, category, section = '') {
 
 exports.handler = async function(event, context) {
   try {
-    const modelsPath = './models';
+    const modelsPath = path.join(process.env.PUBLISH_DIR || '.', 'models');
     const categories = await fs.readdir(modelsPath);
 
     let allModels = [];

@@ -1,5 +1,5 @@
 [build]
-  command = "pnpm install && mkdir -p public && cp -r models thumbnails styles public/"
+  command = "pnpm install && mkdir -p public && cp index.html public/ && [ -d styles ] && cp -r styles public/ || true && [ -d models ] && cp -r models public/ || true && [ -d thumbnails ] && cp -r thumbnails public/ || true"
   publish = "public"
   functions = "netlify/functions"
 
