@@ -197,26 +197,12 @@ export default function Home() {
         grouped[model.category] = {};
       }
 
-      if (selectedCategory === "All") {
-        // When showing all categories, don't use sections
-        if (!grouped[model.category]["models"]) {
-          grouped[model.category]["models"] = [];
-        }
-        grouped[model.category]["models"].push(model);
-      } else {
-        // Use sections only when a specific category is selected
-        if (!model.section) {
-          if (!grouped[model.category]["models"]) {
-            grouped[model.category]["models"] = [];
-          }
-          grouped[model.category]["models"].push(model);
-        } else {
-          if (!grouped[model.category][model.section]) {
-            grouped[model.category][model.section] = [];
-          }
-          grouped[model.category][model.section].push(model);
-        }
+      const targetSection =
+        selectedCategory === "All" ? "models" : model.section || "models";
+      if (!grouped[model.category][targetSection]) {
+        grouped[model.category][targetSection] = [];
       }
+      grouped[model.category][targetSection].push(model);
     });
     return grouped;
   };
@@ -323,22 +309,23 @@ export default function Home() {
                   gap: "1.5rem",
                 }}
               >
-                {sections["models"].map((model) => (
-                  <div
-                    key={model.name}
-                    className="card"
-                    onClick={() => showModel(model.modelPath)}
-                  >
-                    <div className="card-image">
-                      <img
-                        src={model.thumbnailPath}
-                        alt={model.name}
-                        loading="lazy"
-                      />
+                {Array.isArray(sections["models"]) &&
+                  sections["models"].map((model: Model) => (
+                    <div
+                      key={`${model.category}-${model.name}`}
+                      className="card"
+                      onClick={() => showModel(model.modelPath)}
+                    >
+                      <div className="card-image">
+                        <img
+                          src={model.thumbnailPath}
+                          alt={model.name}
+                          loading="lazy"
+                        />
+                      </div>
+                      <div className="card-title">{model.name}</div>
                     </div>
-                    <div className="card-title">{model.name}</div>
-                  </div>
-                ))}
+                  ))}
               </div>
             </div>
           ))
@@ -346,9 +333,10 @@ export default function Home() {
           <div className="category-section">
             <div className="sections-container">
               {Object.entries(groupedModels[selectedCategory] || {}).map(
-                ([section, sectionModels]) =>
-                  section === "models" ? (
-                    // Render models directly without section header when no sections exist
+                ([section, sectionModels]) => {
+                  if (!Array.isArray(sectionModels)) return null;
+
+                  return section === "models" ? (
                     <div
                       key={section}
                       className="grid"
@@ -357,9 +345,9 @@ export default function Home() {
                         gap: "1.5rem",
                       }}
                     >
-                      {sectionModels.map((model) => (
+                      {sectionModels.map((model: Model) => (
                         <div
-                          key={model.name}
+                          key={`${model.category}-${model.name}`}
                           className="card"
                           onClick={() => showModel(model.modelPath)}
                         >
@@ -375,7 +363,6 @@ export default function Home() {
                       ))}
                     </div>
                   ) : (
-                    // Render section with header for categorized models
                     <div key={section} className="section">
                       <div
                         className="section-header"
@@ -395,9 +382,9 @@ export default function Home() {
                             gap: "1.5rem",
                           }}
                         >
-                          {sectionModels.map((model) => (
+                          {sectionModels.map((model: Model) => (
                             <div
-                              key={model.name}
+                              key={`${model.category}-${model.name}`}
                               className="card"
                               onClick={() => showModel(model.modelPath)}
                             >
@@ -414,7 +401,8 @@ export default function Home() {
                         </div>
                       )}
                     </div>
-                  )
+                  );
+                }
               )}
             </div>
           </div>
