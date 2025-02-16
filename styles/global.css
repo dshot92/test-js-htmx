@@ -152,12 +152,16 @@ header {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100vw;
-    height: 100vh;
+    width: 100%;
+    height: 100%;
     background-color: #1a1a1a;
+    overflow: hidden;
 }
 
 model-viewer {
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
     --progress-bar-height: 4px;
@@ -165,6 +169,8 @@ model-viewer {
     opacity: 0;
     transition: opacity 0.5s ease-in-out;
     background: transparent;
+    margin: 0;
+    padding: 0;
 }
 
 model-viewer[loaded] {
@@ -173,39 +179,37 @@ model-viewer[loaded] {
 
 .back-btn {
     position: fixed;
-    top: 1rem;
-    left: 1rem;
-    background: rgba(255, 255, 255, 0.1);
+    top: 1.5rem;
+    left: 1.5rem;
+    background: rgba(255, 255, 255, 0.15);
     color: white;
     border: none;
-    width: 2.5rem;
-    height: 2.5rem;
+    width: 3rem;
+    height: 3rem;
     border-radius: 50%;
     font-size: 1.5rem;
     cursor: pointer;
     z-index: 10;
-    backdrop-filter: blur(4px);
-    transition: background-color 0.2s;
-    display: grid;
-    place-items: center;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition: all 0.2s ease-in-out;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    line-height: 1;
+    padding-right: 2px;
 }
 
 .back-btn:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.25);
+    transform: translateX(-2px);
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2);
 }
 
-#ar-button {
-    position: fixed;
-    bottom: 1rem;
-    right: 1rem;
-    background-color: var(--accent-color);
-    border-radius: 4px;
-    border: none;
-    color: white;
-    padding: 0.5rem 1rem;
-    font-family: inherit;
-    cursor: pointer;
-    z-index: 10;
+.back-btn:active {
+    transform: translateX(0px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .progress-bar {
@@ -260,5 +264,20 @@ model-viewer[loaded] {
 @keyframes spin {
     100% {
         transform: rotate(360deg);
+    }
+}
+
+/* Ensure no viewport gaps on mobile */
+@media screen and (max-width: 768px) {
+    .viewer-view {
+        width: 100vw;
+        height: 100vh;
+        height: 100dvh; /* For modern mobile browsers */
+    }
+    
+    model-viewer {
+        width: 100vw;
+        height: 100vh;
+        height: 100dvh; /* For modern mobile browsers */
     }
 } 
