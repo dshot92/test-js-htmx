@@ -17,8 +17,12 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [columnCount, setColumnCount] = useState(() => {
-    const saved = localStorage.getItem("columnCount");
-    return saved ? parseInt(saved) : 4;
+    // Initialize from localStorage or default to 4
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("columnCount");
+      return saved ? parseInt(saved) : 4;
+    }
+    return 4;
   });
   const { theme, toggleTheme } = useTheme();
 
@@ -30,21 +34,18 @@ export default function Home() {
     fetchModels();
   }, [selectedCategory]);
 
-  const handleColumnChange = (value: number) => {
-    setColumnCount(value);
-    localStorage.setItem("columnCount", value.toString());
-  };
+  // Save column count to localStorage when it changes
+  useEffect(() => {
+    localStorage.setItem("columnCount", columnCount.toString());
+  }, [columnCount]);
 
+  // Handle browser back button
   useEffect(() => {
     const handlePopState = (event: PopStateEvent) => {
       if (event.state?.modelPath) {
         setSelectedModel(event.state.modelPath);
       } else {
         setSelectedModel(null);
-      }
-      // Restore column count from history state if it exists
-      if (event.state?.columnCount) {
-        setColumnCount(event.state.columnCount);
       }
     };
 
@@ -93,11 +94,7 @@ export default function Home() {
 
   const showModel = (modelPath: string) => {
     // Push the current state to history before showing the model
-    window.history.pushState(
-      { modelPath, columnCount: columnCount },
-      "",
-      window.location.pathname
-    );
+    window.history.pushState({ modelPath }, "", window.location.pathname);
     setSelectedModel(modelPath);
   };
 
@@ -182,7 +179,7 @@ export default function Home() {
         <div className="column-control">
           <select
             value={columnCount}
-            onChange={(e) => handleColumnChange(parseInt(e.target.value))}
+            onChange={(e) => setColumnCount(parseInt(e.target.value))}
             className="select"
           >
             {[1, 2, 3, 4, 5, 6, 7, 8].map((count) => (
