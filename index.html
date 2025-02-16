@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Model Viewer</title>
+    <link rel="stylesheet" href="/styles/global.css">
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
+</head>
+<body>
+    <div id="app" class="app">
+        <div id="gallery-view" class="view">
+            <header>
+                <h1>3D Model Viewer</h1>
+                <button class="categories-btn"
+                        hx-get="/api/categories"
+                        hx-target="#categories-list"
+                        hx-swap="innerHTML">
+                    Categories
+                </button>
+            </header>
+
+            <nav id="categories-list" class="categories-list">
+                <!-- Categories will be loaded here -->
+            </nav>
+
+            <main id="content" class="content">
+                <div id="models-grid" class="models-grid"
+                     hx-get="/api/models/all"
+                     hx-trigger="load">
+                    <!-- Models will be loaded here -->
+                </div>
+            </main>
+        </div>
+
+        <div id="viewer-view" class="view viewer-view hidden">
+            <button class="back-btn" onclick="closeViewer()">←</button>
+            <model-viewer id="model-viewer"
+                         camera-controls
+                         auto-rotate
+                         rotation-per-second="30deg"
+                         shadow-intensity="1"
+                         shadow-softness="1"
+                         exposure="1"
+                         environment-image="neutral"
+                         auto-rotate-delay="0"
+                         interaction-prompt="none"
+                         camera-orbit="0deg 75deg 105%"
+                         min-camera-orbit="auto auto 5%"
+                         max-camera-orbit="auto auto 200%"
+                         touch-action="pan-y">
+                <div class="progress-bar hide" slot="progress-bar">
+                    <div class="update-bar"></div>
+                </div>
+                <button slot="ar-button" id="ar-button">
+                    View in AR
+                </button>
+            </model-viewer>
+        </div>
+    </div>
+
+    <script>
+        const modelViewer = document.querySelector('#model-viewer');
+        const galleryView = document.querySelector('#gallery-view');
+        const viewerView = document.querySelector('#viewer-view');
+
+        function closeViewer() {
+            viewerView.classList.add('hidden');
+            galleryView.classList.remove('hidden');
+            modelViewer.src = '';
+        }
+
+        function showModel(modelPath) {
+            galleryView.classList.add('hidden');
+            viewerView.classList.remove('hidden');
+            modelViewer.src = modelPath;
+
+            // Reset camera position
+            modelViewer.cameraOrbit = '0deg 75deg 105%';
+            modelViewer.resetTurntableRotation();
+        }
+
+        // Handle loading progress
+        modelViewer.addEventListener('progress', (e) => {
+            const progressBar = document.querySelector('.progress-bar');
+            const updatingBar = document.querySelector('.update-bar');
+            
+            progressBar.classList.remove('hide');
+            updatingBar.style.width = `${e.detail.totalProgress * 100}%`;
+            
+            if (e.detail.totalProgress === 1) {
+                progressBar.classList.add('hide');
+            }
+        });
+    </script>
+</body>
+</html> 
