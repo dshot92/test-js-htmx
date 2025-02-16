@@ -8,14 +8,14 @@ exports.handler = async function(event, context) {
     
     const html = [
       `<div class="category-item"
-            hx-get="/api/models/all"
+            hx-get="/.netlify/functions/models"
             hx-target="#models-grid"
             hx-swap="innerHTML">
           All Models
       </div>`,
       ...categories.map(category => `
           <div class="category-item"
-               hx-get="/api/models/${category}"
+               hx-get="/.netlify/functions/models?category=${category}"
                hx-target="#models-grid"
                hx-swap="innerHTML">
               ${category}

@@ -38,12 +38,22 @@ exports.handler = async function(event, context) {
   try {
     const modelsPath = path.join(__dirname, 'models');
     const categories = await fs.readdir(modelsPath);
-
+    
     let allModels = [];
-    for (const category of categories) {
-      const categoryPath = path.join(modelsPath, category);
-      const models = await getAllModels(categoryPath, category);
+    const requestedCategory = event.queryStringParameters?.category;
+
+    // If a specific category is requested, only process that category
+    if (requestedCategory && categories.includes(requestedCategory)) {
+      const categoryPath = path.join(modelsPath, requestedCategory);
+      const models = await getAllModels(categoryPath, requestedCategory);
       allModels = allModels.concat(models);
+    } else {
+      // Otherwise, process all categories
+      for (const category of categories) {
+        const categoryPath = path.join(modelsPath, category);
+        const models = await getAllModels(categoryPath, category);
+        allModels = allModels.concat(models);
+      }
     }
 
     const html = allModels.map(model => `

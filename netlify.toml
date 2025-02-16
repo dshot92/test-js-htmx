@@ -7,22 +7,6 @@
   node_bundler = "esbuild"
   included_files = ["models/**", "thumbnails/**"]
 
-[[redirects]]
-  from = "/api/categories"
-  to = "/.netlify/functions/categories"
-  status = 200
-
-[[redirects]]
-  from = "/api/models/all"
-  to = "/.netlify/functions/models"
-  status = 200
-
-# Catch-all redirect for other /api endpoints
-[[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/:splat"
-  status = 200
-
 [build.environment]
   NODE_VERSION = "18"
 
