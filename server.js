@@ -12,7 +12,7 @@ app.use('/models', express.static('models'));
 app.use('/thumbnails', express.static('thumbnails'));
 
 // Get categories
-app.get('/.netlify/functions/categories', async (req, res) => {
+app.get('/categories', async (req, res) => {
     try {
         const modelsPath = path.join(__dirname, 'models');
         let categories = [];
@@ -81,7 +81,7 @@ async function getAllModels(dir, category, section = '') {
 }
 
 // Get all models or models from a specific category
-app.get('/.netlify/functions/models', async (req, res) => {
+app.get('/models', async (req, res) => {
     try {
         const modelsPath = path.join(__dirname, 'models');
         let categories = [];
