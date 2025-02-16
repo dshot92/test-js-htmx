@@ -8,23 +8,31 @@ const PORT = 3000;
 // Serve static files
 app.use(express.static('public'));
 app.use('/styles', express.static('styles'));
+app.use('/models', express.static('models'));
+app.use('/thumbnails', express.static('thumbnails'));
 
 // Get categories
-app.get('/api/categories', async (req, res) => {
+app.get('/.netlify/functions/categories', async (req, res) => {
     try {
-        const modelsPath = path.join(__dirname, 'public', 'models');
-        const categories = await fs.readdir(modelsPath);
+        const modelsPath = path.join(__dirname, 'models');
+        let categories = [];
+        try {
+            categories = await fs.readdir(modelsPath);
+        } catch (err) {
+            if (err.code !== 'ENOENT') throw err;
+            // If directory doesn't exist, use empty array
+        }
         
         const html = [
             `<div class="category-item"
-                  hx-get="/api/models/all"
+                  hx-get="/.netlify/functions/models"
                   hx-target="#models-grid"
                   hx-swap="innerHTML">
                 All Models
             </div>`,
             ...categories.map(category => `
                 <div class="category-item"
-                     hx-get="/api/models/${category}"
+                     hx-get="/.netlify/functions/models?category=${category}"
                      hx-target="#models-grid"
                      hx-swap="innerHTML">
                     ${category}
@@ -36,62 +44,6 @@ app.get('/api/categories', async (req, res) => {
     } catch (error) {
         console.error('Error loading categories:', error);
         res.status(500).send('Error loading categories');
-    }
-});
-
-// Get all models from all categories
-app.get('/api/models/all', async (req, res) => {
-    try {
-        const modelsPath = path.join(__dirname, 'public', 'models');
-        const categories = await fs.readdir(modelsPath);
-        
-        let allModels = [];
-        for (const category of categories) {
-            const categoryPath = path.join(modelsPath, category);
-            const models = await getAllModels(categoryPath, category);
-            allModels = allModels.concat(models);
-        }
-
-        const html = allModels.map(model => `
-            <div class="model-card" onclick="showModel('${model.modelPath}')">
-                <div class="model-preview">
-                    <img src="${model.thumbnailPath}" alt="${model.name}" loading="lazy">
-                </div>
-                <div class="model-info">
-                    <h3>${model.name}</h3>
-                </div>
-            </div>
-        `).join('');
-
-        res.send(html);
-    } catch (error) {
-        console.error('Error loading all models:', error);
-        res.status(500).send('Error loading models');
-    }
-});
-
-// Get models for a specific category
-app.get('/api/models/:category', async (req, res) => {
-    try {
-        const category = req.params.category;
-        const categoryPath = path.join(__dirname, 'public', 'models', category);
-        const models = await getAllModels(categoryPath, category);
-
-        const html = models.map(model => `
-            <div class="model-card" onclick="showModel('${model.modelPath}')">
-                <div class="model-preview">
-                    <img src="${model.thumbnailPath}" alt="${model.name}" loading="lazy">
-                </div>
-                <div class="model-info">
-                    <h3>${model.name}</h3>
-                </div>
-            </div>
-        `).join('');
-
-        res.send(html);
-    } catch (error) {
-        console.error('Error loading models:', error);
-        res.status(500).send('Error loading models');
     }
 });
 
@@ -127,6 +79,51 @@ async function getAllModels(dir, category, section = '') {
 
     return models;
 }
+
+// Get all models or models from a specific category
+app.get('/.netlify/functions/models', async (req, res) => {
+    try {
+        const modelsPath = path.join(__dirname, 'models');
+        let categories = [];
+        try {
+            categories = await fs.readdir(modelsPath);
+        } catch (err) {
+            if (err.code !== 'ENOENT') throw err;
+            // If directory doesn't exist, use empty array
+        }
+        
+        let allModels = [];
+        const requestedCategory = req.query.category;
+
+        if (requestedCategory && categories.includes(requestedCategory)) {
+            const categoryPath = path.join(modelsPath, requestedCategory);
+            const models = await getAllModels(categoryPath, requestedCategory);
+            allModels = allModels.concat(models);
+        } else {
+            for (const category of categories) {
+                const categoryPath = path.join(modelsPath, category);
+                const models = await getAllModels(categoryPath, category);
+                allModels = allModels.concat(models);
+            }
+        }
+
+        const html = allModels.map(model => `
+            <div class="model-card" onclick="showModel('${model.modelPath}')">
+                <div class="model-preview">
+                    <img src="${model.thumbnailPath}" alt="${model.name}" loading="lazy">
+                </div>
+                <div class="model-info">
+                    <h3>${model.name}</h3>
+                </div>
+            </div>
+        `).join('');
+
+        res.send(html);
+    } catch (error) {
+        console.error('Error loading models:', error);
+        res.status(500).send('Error loading models');
+    }
+});
 
 // Serve index.html
 app.get('/', (req, res) => {
