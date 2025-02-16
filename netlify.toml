@@ -1,5 +1,5 @@
 [build]
-  command = "npm install"
+  command = "pnpm install"
   publish = "/"
   functions = "netlify/functions"
 
@@ -26,6 +26,6 @@
   NODE_VERSION = "18"
 
 [dev]
-  command = "npm start"
+  command = "pnpm start"
   port = 3000
   publish = "/" 
