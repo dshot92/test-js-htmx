@@ -5,6 +5,7 @@
 
 [functions]
   node_bundler = "esbuild"
+  included_files = ["models/**", "thumbnails/**"]
 
 [[redirects]]
   from = "/api/categories"
