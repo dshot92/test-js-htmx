@@ -2,6 +2,9 @@ import { NextResponse, NextRequest } from 'next/server'
 import fs from 'fs/promises'
 import path from 'path'
 
+// Add route segment config
+export const dynamic = 'force-dynamic'
+
 interface Model {
   name: string;
   modelPath: string;
