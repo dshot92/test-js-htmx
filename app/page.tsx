@@ -131,9 +131,6 @@ export default function Home() {
           environment-image="neutral"
           ar="true"
           ar-modes="webxr scene-viewer quick-look"
-          ar-scale="fixed"
-          ar-placement="floor"
-          ios-src={selectedModel.replace(".glb", ".usdz")}
           interaction-prompt="none"
           camera-orbit="0deg 75deg 105%"
           min-camera-orbit="auto auto 5%"
